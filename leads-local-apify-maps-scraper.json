@@ -1,0 +1,2724 @@
+[
+  {
+    "updatedAt": "2026-09-28T16:55:48.442Z",
+    "createdAt": "2026-09-17T19:34:28.553Z",
+    "id": "S0HrXmdki1i1CVQe",
+    "name": "Leads Local - Apify Maps Scraper",
+    "description": "Lead gen local via Apify Google Maps: form keywords+ville, dedup, split no-website vs social vs real vers Google Sheets",
+    "active": true,
+    "isArchived": false,
+    "nodes": [
+      {
+        "parameters": {
+          "formTitle": "Prospection locale - Leads",
+          "formDescription": "Entrez niche + ville pour scraper Google Maps",
+          "formFields": {
+            "values": [
+              {
+                "fieldLabel": "Keyword / Niche",
+                "fieldName": "keywords",
+                "placeholder": "ex: plombier, electricien",
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Ville / Zone",
+                "fieldName": "location",
+                "placeholder": "ex: Casablanca, Maroc",
+                "requiredField": true
+              },
+              {
+                "fieldLabel": "Max resultats",
+                "fieldType": "number",
+                "fieldName": "maxResults"
+              }
+            ]
+          },
+          "options": {
+            "appendAttribution": false,
+            "path": "lead-scraper"
+          }
+        },
+        "id": "b10596b3-56e9-43d4-9951-8ff2ad79828b",
+        "name": "On form submission",
+        "type": "n8n-nodes-base.formTrigger",
+        "typeVersion": 2.6,
+        "position": [
+          240,
+          400
+        ],
+        "webhookId": "59ad7f9e-87b3-44bc-9af1-fc570813406a"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://api.apify.com/v2/actors/nwua9Gu5YrADL7ZDj/run-sync-get-dataset-items",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Accept",
+                "value": "application/json"
+              },
+              {
+                "name": "Authorization",
+                "value": "Bearer apify_api_Q7EdXPluLB8keAycZCrbHT6zphnb2Q0FfcZ2"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n    \"enableCompetitorAnalysis\": false,\n    \"includeWebResults\": false,\n    \"language\": \"en\",\n    \"locationQuery\": \"{{ $json.location }}\",\n    \"maxCompetitorsToAnalyze\": 30,\n    \"maxCrawledPlacesPerSearch\": {{ $json.maxResults }},\n    \"maximumLeadsEnrichmentRecords\": 0,\n    \"scrapeContacts\": false,\n    \"scrapeDirectories\": false,\n    \"scrapeImageAuthors\": false,\n    \"scrapeOrderOnline\": false,\n    \"scrapePlaceDetailPage\": false,\n    \"scrapeReviewsPersonalData\": true,\n    \"scrapeSocialMediaProfiles\": {\n        \"facebooks\": false,\n        \"instagrams\": false,\n        \"tiktoks\": false,\n        \"twitters\": false,\n        \"youtubes\": false\n    },\n    \"scrapeTableReservationProvider\": false,\n    \"searchStringsArray\": [\n        \"{{ $json.keywords }}\"\n    ],\n    \"skipClosedPlaces\": false,\n    \"verifyLeadsEnrichmentEmails\": false\n}",
+          "options": {
+            "redirect": {
+              "redirect": {}
+            },
+            "timeout": 120000
+          }
+        },
+        "id": "a61ec9c2-99dc-4ad5-8f43-ad54f8a0dae8",
+        "name": "HTTP Request",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          464,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "compare": "selectedFields",
+          "fieldsToCompare": "placeId",
+          "options": {}
+        },
+        "id": "0e8fe142-c350-4175-bc10-9cd08638b36b",
+        "name": "Remove Duplicates",
+        "type": "n8n-nodes-base.removeDuplicates",
+        "typeVersion": 2,
+        "position": [
+          688,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.website }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "isNotEmpty"
+                },
+                "rightValue": "",
+                "id": "c927267f-bcde-42db-bf85-142a06b1d239"
+              },
+              {
+                "id": "b9987419-8aae-4372-befc-4c1db0924c78",
+                "leftValue": "={{ $json.website }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "id": "7c2474ff-20e1-4158-8adc-43276d1103be",
+        "name": "Website exists",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          912,
+          400
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a1",
+                "name": "businessName",
+                "value": "={{ $json.title }}",
+                "type": "string"
+              },
+              {
+                "id": "a2",
+                "name": "address",
+                "value": "={{ $json.address }}",
+                "type": "string"
+              },
+              {
+                "id": "a3",
+                "name": "phone",
+                "value": "={{ $json.phone.replace('+', '') }}",
+                "type": "string"
+              },
+              {
+                "id": "a4",
+                "name": "website",
+                "value": "={{ $json.website }}",
+                "type": "string"
+              },
+              {
+                "id": "a5",
+                "name": "rating",
+                "value": "={{ $json.totalScore }}",
+                "type": "number"
+              },
+              {
+                "id": "a6",
+                "name": "googleUrl",
+                "value": "={{ $json.url }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "caf0fe62-2497-4037-8ca3-1330ddc352d6",
+        "name": "Edit Fields",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1120,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.website }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                },
+                "rightValue": "facebook.com",
+                "id": "1178d851-f03e-44c4-ac0c-8d8d775dd105"
+              },
+              {
+                "leftValue": "={{ $json.website }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                },
+                "rightValue": "instagram.com",
+                "id": "329f1479-14ff-40f3-8bd9-119b87ef7e0d"
+              },
+              {
+                "leftValue": "={{ $json.website }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                },
+                "rightValue": "linkedin.com",
+                "id": "1fa9ffb8-aa1c-4991-bc66-c6f9d5d73899"
+              },
+              {
+                "leftValue": "={{ $json.website }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                },
+                "rightValue": "tiktok.com",
+                "id": "23071f3e-9e96-409f-93cd-4ca5aaa99264"
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "id": "ff463af0-fb9a-4e07-8a63-e9636fad0c56",
+        "name": "If1",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1296,
+          224
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1wO1Cb0ucH4VBoWf4ksn9AEAb3G4XTOtG0SKN-Ma2d1s",
+            "mode": "list",
+            "cachedResultName": "n8n leads",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wO1Cb0ucH4VBoWf4ksn9AEAb3G4XTOtG0SKN-Ma2d1s/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 780792501,
+            "mode": "list",
+            "cachedResultName": "nowebsite",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wO1Cb0ucH4VBoWf4ksn9AEAb3G4XTOtG0SKN-Ma2d1s/edit#gid=780792501"
+          },
+          "columns": {
+            "mappingMode": "autoMapInputData",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "f3809d45-5602-4a17-9848-25b603551265",
+        "name": "Website is Social media",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1536,
+          160
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "vOM2XUtJ0G1CJOfI",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1wO1Cb0ucH4VBoWf4ksn9AEAb3G4XTOtG0SKN-Ma2d1s",
+            "mode": "list",
+            "cachedResultName": "n8n leads",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wO1Cb0ucH4VBoWf4ksn9AEAb3G4XTOtG0SKN-Ma2d1s/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": "gid=0",
+            "mode": "list",
+            "cachedResultName": "website",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wO1Cb0ucH4VBoWf4ksn9AEAb3G4XTOtG0SKN-Ma2d1s/edit#gid=0"
+          },
+          "columns": {
+            "mappingMode": "autoMapInputData",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "businessName",
+                "displayName": "businessName",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "address",
+                "displayName": "address",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "phone",
+                "displayName": "phone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "website",
+                "displayName": "website",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "rating",
+                "displayName": "rating",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "googleUrl",
+                "displayName": "googleUrl",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "d1c1be6e-1c4e-48c9-b70f-d6cabca9191e",
+        "name": "Real websites",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1536,
+          352
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "vOM2XUtJ0G1CJOfI",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b1",
+                "name": "businessName",
+                "value": "={{ $json.title }}",
+                "type": "string"
+              },
+              {
+                "id": "b2",
+                "name": "address",
+                "value": "={{ $json.address }}",
+                "type": "string"
+              },
+              {
+                "id": "b3",
+                "name": "phone",
+                "value": "={{ $json.phone.replace('+', '') }}",
+                "type": "string"
+              },
+              {
+                "id": "b4",
+                "name": "rating",
+                "value": "={{ $json.totalScore }}",
+                "type": "number"
+              },
+              {
+                "id": "b5",
+                "name": "googleUrl",
+                "value": "={{ $json.url }}",
+                "type": "string"
+              },
+              {
+                "id": "b6",
+                "name": "status",
+                "value": "no_website",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "59a90c61-7119-474b-96d6-a97fc3df2768",
+        "name": "Edit Fields1",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1120,
+          512
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1wO1Cb0ucH4VBoWf4ksn9AEAb3G4XTOtG0SKN-Ma2d1s",
+            "mode": "list",
+            "cachedResultName": "n8n leads",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wO1Cb0ucH4VBoWf4ksn9AEAb3G4XTOtG0SKN-Ma2d1s/edit?usp=drivesdk"
+          },
+          "sheetName": {
+            "__rl": true,
+            "value": 780792501,
+            "mode": "list",
+            "cachedResultName": "nowebsite",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1wO1Cb0ucH4VBoWf4ksn9AEAb3G4XTOtG0SKN-Ma2d1s/edit#gid=780792501"
+          },
+          "columns": {
+            "mappingMode": "autoMapInputData",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "businessName",
+                "displayName": "businessName",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "address",
+                "displayName": "address",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "phone",
+                "displayName": "phone",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "rating",
+                "displayName": "rating",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "googleUrl",
+                "displayName": "googleUrl",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "status",
+                "displayName": "status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "id": "d0167214-fa6b-49b1-bc24-5164901f256a",
+        "name": "Data with no website",
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          1344,
+          512
+        ],
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "vOM2XUtJ0G1CJOfI",
+            "name": "Google Sheets account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "On form submission": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Remove Duplicates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Remove Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Website exists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Website exists": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Website is Social media",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Real websites",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Data with no website",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "settings": {
+      "executionOrder": "v1",
+      "availableInMCP": true,
+      "binaryMode": "separate"
+    },
+    "staticData": null,
+    "meta": {
+      "aiBuilderAssisted": true,
+      "builderVariant": "mcp",
+      "templateCredsSetupCompleted": true
+    },
+    "nodeGroups": [],
+    "pinData": {
+      "HTTP Request": [
+        {
+          "json": {
+            "title": "Terence Frank Real Estate | Nice",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "11 Rue Lamartine, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "11 Rue Lamartine",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "http://terencefrank.com/",
+            "phone": "+33 6 65 26 40 40",
+            "phoneUnformatted": "+33665264040",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.7017748,
+              "lng": 7.2691166
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 4.9,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJ4T4QQabazRIRlxfy22lFznY",
+            "categories": [
+              "Real estate agency",
+              "Property management company",
+              "Real estate agent",
+              "Real estate rental agency"
+            ],
+            "fid": "0x12cddaa641103ee1:0x76ce4569dbf21797",
+            "cid": "8560856262641850263",
+            "reviewsCount": 116,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 2,
+              "threeStar": 0,
+              "fourStar": 3,
+              "fiveStar": 111
+            },
+            "imagesCount": 8,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.881Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "9 AM to 12:30 PM"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Terence%20Frank%20Real%20Estate%20%7C%20Nice&query_place_id=ChIJ4T4QQabazRIRlxfy22lFznY",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 1,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlI3ljpeoxIn7ka5Gjlc8JkrskzDdYLxV4Tbptlt-R_wRip7k7Pd0XkCeqWrNY1sTFDYt636dcSUduYRu8NpXQz3KzJEvGQCS2P9jmdCLtp00c5YOV0rfAck89DtJlCBlcppS-l=w408-h271-k-no",
+            "kgmid": "/g/11dxjxfpqm",
+            "businessProfileId": "16082747282174526234"
+          }
+        },
+        {
+          "json": {
+            "title": "Haussmann Real Estate",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "11 Av. Jean Médecin, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "11 Av. Jean Médecin",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://www.haussmannrealestate.com/",
+            "phone": "+33 4 22 13 86 32",
+            "phoneUnformatted": "+33422138632",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6990503,
+              "lng": 7.2686997
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 4.6,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJA3l2fjXbzRIRg4-Yz6bfZWE",
+            "categories": [
+              "Real estate agency",
+              "Property management company",
+              "Real estate agent"
+            ],
+            "fid": "0x12cddb357e767903:0x6165dfa6cf988f83",
+            "cid": "7018261501867233155",
+            "reviewsCount": 19,
+            "reviewsDistribution": {
+              "oneStar": 1,
+              "twoStar": 1,
+              "threeStar": 0,
+              "fourStar": 1,
+              "fiveStar": 16
+            },
+            "imagesCount": 2,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.882Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "Closed"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Haussmann%20Real%20Estate&query_place_id=ChIJA3l2fjXbzRIRg4-Yz6bfZWE",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 2,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmSVfIcs8VSIwNo3OSkoTygG2HSftKKeoOdqRjKEyy2bJpE3qy6jLFMd_m8LbUfayveR_E-khZo1PpmaNZs6lXJCY8vMOf_WQz6VGjmjq-dNjOvNl0R3Q9mf4Vxh77sWHNPaXhcDxQQViGB=w408-h271-k-no",
+            "kgmid": "/g/1tmk0tyz",
+            "businessProfileId": "2004840910876382815"
+          }
+        },
+        {
+          "json": {
+            "title": "Cosmopolitan Real Estate",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "53 Rue de France, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "53 Rue de France",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "http://www.cosmopolitanrealestate.fr/",
+            "phone": "+33 4 93 82 96 28",
+            "phoneUnformatted": "+33493829628",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6957659,
+              "lng": 7.2604019
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 4.8,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJW1lIZAvQzRIRShnDYj04G6A",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cdd00b6448595b:0xa01b383d62c3194a",
+            "cid": "11536876706740771146",
+            "reviewsCount": 5,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 1,
+              "fiveStar": 4
+            },
+            "imagesCount": 2,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.883Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 12:30 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 12:30 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 12:30 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 12:30 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 12:30 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "9 AM to 12:30 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "additionalInfo": {
+              "Accessibility": [
+                {
+                  "Wheelchair accessible entrance": true
+                }
+              ]
+            },
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Cosmopolitan%20Real%20Estate&query_place_id=ChIJW1lIZAvQzRIRShnDYj04G6A",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 3,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWluOZYrn3PXqvIBQtJhy56affyyd5iH0KyNyIvS6wlYX7lAt16J9tTJisjRAbKW6myd8zVeF_8AGs2Mq--eiclSd0T-TRfst4G8ghMXInjUwPS4pAjj0LubRo-0Tv0CXlmvAFv-WA=w408-h306-k-no",
+            "kgmid": "/g/11cs2wndm1",
+            "businessProfileId": "15818152620035852231"
+          }
+        },
+        {
+          "json": {
+            "title": "Warde Property",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "1 Pl. Massena, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "1 Pl. Massena",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://www.wardeproperty.com/",
+            "phone": "+33 7 45 08 13 74",
+            "phoneUnformatted": "+33745081374",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.697445,
+              "lng": 7.269593
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 5,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJhZuf4qTazRIRAaeGCfgecAk",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cddaa4e29f9b85:0x9701ef80986a701",
+            "cid": "680077594393487105",
+            "reviewsCount": 57,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 0,
+              "fiveStar": 57
+            },
+            "imagesCount": 10,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.883Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "9 AM to 7 PM"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Warde%20Property&query_place_id=ChIJhZuf4qTazRIRAaeGCfgecAk",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 4,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmgX45vKGT6rdEI78uwr_ShGCJtSSTqj828U6zaek1p1KcMzFslzK8zzJJbZPRZ8OHmZ4Uvmxwnf-TwR59Wo9FJBx2KECFGC90SdrTuWnyemkQuYtueuTvAYwD9EEU-gr_86y6K9JgBTrBB=w408-h272-k-no",
+            "kgmid": "/g/11c58668b_",
+            "businessProfileId": "15834882552488402421"
+          }
+        },
+        {
+          "json": {
+            "title": "Beau Site Estate",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "14 Rue Maccarani, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "14 Rue Maccarani",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://beausite-estate.com/",
+            "phone": "+33 6 98 80 32 52",
+            "phoneUnformatted": "+33698803252",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6990073,
+              "lng": 7.2645109
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 4.7,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJmyQPysfRzRIRaDFA89uWJsA",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cdd1c7ca0f249b:0xc02696dbf3403168",
+            "cid": "13845919975820243304",
+            "reviewsCount": 13,
+            "reviewsDistribution": {
+              "oneStar": 1,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 0,
+              "fiveStar": 12
+            },
+            "imagesCount": 8,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.883Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 12:30 PM, 2 to 6:30 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 12:30 PM, 2 to 6:30 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 12:30 PM, 2 to 6:30 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 12:30 PM, 2 to 6:30 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 12:30 PM, 2 to 6:30 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "Closed"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Beau%20Site%20Estate&query_place_id=ChIJmyQPysfRzRIRaDFA89uWJsA",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 5,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk-O0EnA692RLk0FaAg8o8xA_SovQMQOu1qkPZ64M4dLeufAcfwSWI10AdRumc-Hy7MC0BdZBZK9dFf5KssuL8MHAsrR_euS9jXD1KMov43RxcAfgdw_VqVauTbg4MswSVvhqVQfQ=w408-h408-k-no",
+            "kgmid": "/g/11wv7rkspr",
+            "businessProfileId": "2910552446047502967"
+          }
+        },
+        {
+          "json": {
+            "title": "Agence 107 Promenade",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "107 Prom. des Anglais, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "107 Prom. des Anglais",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "http://www.107promenade.com/",
+            "phone": "+33 4 93 44 83 83",
+            "phoneUnformatted": "+33493448383",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6911404,
+              "lng": 7.2463148
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 4.7,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJi3cXM2rQzRIR4uzMzrf4Vxc",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cdd06a3317778b:0x1757f8b7ceccece2",
+            "cid": "1682086454178409698",
+            "reviewsCount": 62,
+            "reviewsDistribution": {
+              "oneStar": 3,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 7,
+              "fiveStar": 52
+            },
+            "imagesCount": 23,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.883Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "Closed"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "additionalInfo": {
+              "Accessibility": [
+                {
+                  "Wheelchair accessible entrance": true
+                }
+              ]
+            },
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Agence%20107%20Promenade&query_place_id=ChIJi3cXM2rQzRIR4uzMzrf4Vxc",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 6,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm3Dak3QURGteIoN7Dr8W7ByHPLnWAygdYHXFk2P39Dk17LEKRnSNa12TXz1gcqetJPflPSFyB-PBFXPmKK3TCxZCNPX4Q8QxwKphW5j2Eca4J04bspSxe-1XHnutbf5M2sSmxFRw=w408-h306-k-no",
+            "kgmid": "/g/1ts6q7qd",
+            "businessProfileId": "3531557717263274013"
+          }
+        },
+        {
+          "json": {
+            "title": "Alexandre TORTIELLO - Luxury & Prestige Real Estate",
+            "subTitle": "Alexandre TORTIELLO - Vente & Achat immobilier - Nice",
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agent",
+            "address": "9 Av. Gustave V, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "9 Av. Gustave V",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://tortielloimmobilier.fr/",
+            "phone": "+33 6 61 09 47 39",
+            "phoneUnformatted": "+33661094739",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6962787,
+              "lng": 7.2659993
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 5,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJFZpVplbbzRIR0UYUNNaHRFo",
+            "categories": [
+              "Real estate agent"
+            ],
+            "fid": "0x12cddb56a6559a15:0x5a4487d6341446d1",
+            "cid": "6504473115896334033",
+            "reviewsCount": 12,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 0,
+              "fiveStar": 12
+            },
+            "imagesCount": 8,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.883Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 9 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 9 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 9 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 9 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 9 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "9 AM to 9 PM"
+              },
+              {
+                "day": "Sunday",
+                "hours": "9 AM to 9 PM"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "additionalInfo": {
+              "Accessibility": [
+                {
+                  "Wheelchair accessible restroom": true
+                },
+                {
+                  "Wheelchair accessible seating": true
+                }
+              ]
+            },
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Alexandre%20TORTIELLO%20-%20Luxury%20%26%20Prestige%20Real%20Estate&query_place_id=ChIJFZpVplbbzRIR0UYUNNaHRFo",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 7,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmBlnGbiACB9DbSb5LFiZfWJr3Pp4Gm5H5hoqih7-kMYLh7pii2jI5Rhp102RBlDCMyp-zaF91sgyhBazP5MAI_fDtsPTkiuSHSWx2evZt2HsZpWF0jYSvO10y20V6artXf-RmLOrdEdQxQ=w408-h408-k-no",
+            "kgmid": "/g/11tgb1wz10",
+            "businessProfileId": "851003065253169084"
+          }
+        },
+        {
+          "json": {
+            "title": "AVENIR REAL ESTATE",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "6 b Rue Alphonse Karr, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "6 b Rue Alphonse Karr",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://www.avenirrealestate.fr/?utm_source=google&utm_medium=wix_google_business_profile&utm_campaign=2361491575979861084",
+            "phone": "+33 7 44 76 93 94",
+            "phoneUnformatted": "+33744769394",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6988611,
+              "lng": 7.2665475
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 5,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJTbgF9bfbzRIRCSybnCk-X5w",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cddbb7f505b84d:0x9c5f3e299c9b2c09",
+            "cid": "11267793141146266633",
+            "reviewsCount": 4,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 0,
+              "fiveStar": 4
+            },
+            "imagesCount": 7,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.884Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 8:30 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 8:30 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 8:30 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 8:30 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 8:30 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "9 AM to 8:30 PM"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=AVENIR%20REAL%20ESTATE&query_place_id=ChIJTbgF9bfbzRIRCSybnCk-X5w",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 8,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlDMb5x03MFEpw_tVRAp1jy95kXTHAPF0TutHUeUzT-omyyePb-uDLRWdX2jbbAMBuqBdf6Ws4uD_-zcOL-eDnRUiFc5mp3wxvtOsiV2DSRuBrIR7k6_HETwUdRXUF4CbXgtPD8K8AGBQI9=w408-h272-k-no",
+            "kgmid": "/g/11y3x1zx92",
+            "businessProfileId": "2361491575979861084"
+          }
+        },
+        {
+          "json": {
+            "title": "Five Stars Real Estate",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "SIMA IMMOBILIER, 40 Rue de la Buffa, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "SIMA IMMOBILIER, 40 Rue de la Buffa",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://www.fivestarsholidayhouserealestate.com/fr/",
+            "phone": "+33 4 97 08 30 82",
+            "phoneUnformatted": "+33497083082",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6967813,
+              "lng": 7.2595753
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 3.1,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJ71dK9DnRzRIR8s8CbxXal-8",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cdd139f44a57ef:0xef97da156f02cff2",
+            "cid": "17264507482139709426",
+            "reviewsCount": 20,
+            "reviewsDistribution": {
+              "oneStar": 9,
+              "twoStar": 0,
+              "threeStar": 1,
+              "fourStar": 0,
+              "fiveStar": 10
+            },
+            "imagesCount": 4,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.884Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9:30 AM to 6:30 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9:30 AM to 6:30 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9:30 AM to 6:30 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9:30 AM to 6:30 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9:30 AM to 6:30 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "9:30 AM to 6:30 PM"
+              },
+              {
+                "day": "Sunday",
+                "hours": "9:30 AM to 6:30 PM"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "additionalInfo": {
+              "Accessibility": [
+                {
+                  "Wheelchair accessible entrance": true
+                }
+              ]
+            },
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Five%20Stars%20Real%20Estate&query_place_id=ChIJ71dK9DnRzRIR8s8CbxXal-8",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 9,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkEriEGEz0IMaNi31zJxbONBlObPSkQLaCX4hs1kNr0Id2XV9hWQBXxd206CcRtDFlUZrC0jr7q3hn52JlRtx1AZT_I6O8RM1DmoZv5ekvZW-_TpPk529aPa6ENhEXPApGmSpNX=w408-h272-k-no",
+            "kgmid": "/g/11rtyg0jmg",
+            "businessProfileId": "12933544269113328135"
+          }
+        },
+        {
+          "json": {
+            "title": "France Properties Real Estate",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "86 Rue du Maréchal Joffre, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "86 Rue du Maréchal Joffre",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "phone": "",
+            "phoneUnformatted": "",
+            "claimThisBusiness": true,
+            "location": {
+              "lat": 43.6971324,
+              "lng": 7.2573659
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 5,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJrVx1UwzQzRIRUsf2NTnhZio",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cdd00c53755cad:0x2a66e13935f6c752",
+            "cid": "3055377033052211026",
+            "reviewsCount": 1,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 0,
+              "fiveStar": 1
+            },
+            "imagesCount": 1,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.884Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [],
+            "wasOpenAtScrapeTime": null,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=France%20Properties%20Real%20Estate&query_place_id=ChIJrVx1UwzQzRIRUsf2NTnhZio",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 10,
+            "isAdvertisement": false,
+            "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=FOCw4wU3o23j4sx2LXmfOQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=355.1187&pitch=0&thumbfov=100",
+            "kgmid": "/g/11c1szz4xk",
+            "businessProfileId": null
+          }
+        },
+        {
+          "json": {
+            "title": "Sun Sea Hills Real Estate",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "90 Rue de France, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "90 Rue de France",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "http://www.sunseahills.com/",
+            "phone": "+33 4 93 98 25 41",
+            "phoneUnformatted": "+33493982541",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6944014,
+              "lng": 7.2527696
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 4.5,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJbX45MW3QzRIRyZimoFqbGmI",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cdd06d31397e6d:0x621a9b5aa0a698c9",
+            "cid": "7069133378656049353",
+            "reviewsCount": 2,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 1,
+              "fiveStar": 1
+            },
+            "imagesCount": 3,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.884Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [],
+            "wasOpenAtScrapeTime": null,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Sun%20Sea%20Hills%20Real%20Estate&query_place_id=ChIJbX45MW3QzRIRyZimoFqbGmI",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 11,
+            "isAdvertisement": false,
+            "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=EpF6glHT1VkqR2XvQ06OAg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=318.31238&pitch=0&thumbfov=100",
+            "kgmid": "/g/1wl066bv",
+            "businessProfileId": "5241033529017294167"
+          }
+        },
+        {
+          "json": {
+            "title": "CHELBY REAL ESTATE",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "16 Av. Georges Clemenceau, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "16 Av. Georges Clemenceau",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://www.chelbyrealestate.com/",
+            "phone": "+33 7 82 94 44 67",
+            "phoneUnformatted": "+33782944467",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.7018597,
+              "lng": 7.2642644
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 5,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJQUTJDvvRzRIRe75xMl7pB8k",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cdd1fb0ec94441:0xc907e95e3271be7b",
+            "cid": "14485803317243002491",
+            "reviewsCount": 1,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 0,
+              "fiveStar": 1
+            },
+            "imagesCount": 4,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.884Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Sunday",
+                "hours": "9 AM to 6 PM"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=CHELBY%20REAL%20ESTATE&query_place_id=ChIJQUTJDvvRzRIRe75xMl7pB8k",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 12,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkMYpI2d1iqqa_tYYbmbAUbjjgyZ9hw5JoWw2RE8lvjHbG4MA2HN0BhhIvDNrK7mOUhAVsHj8N0pXsMA_gaa3qcwYYzbtwjvm3a_vXUZnHwYs0FdBpL3jbFmHpJoibJ6wW7GEc_=w408-h544-k-no",
+            "kgmid": "/g/11vkt72gmm",
+            "businessProfileId": "18405695050923854482"
+          }
+        },
+        {
+          "json": {
+            "title": "PHT real estate",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "15 Rue Biscarra, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "15 Rue Biscarra",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "http://www.phtrealestate.com/",
+            "phone": "+33 9 83 99 38 17",
+            "phoneUnformatted": "+33983993817",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.7027202,
+              "lng": 7.2690709
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 3.5,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJ63cDJabazRIRPpvIvP3kj6k",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cddaa6250377eb:0xa98fe4fdbcc89b3e",
+            "cid": "12218236092524567358",
+            "reviewsCount": 13,
+            "reviewsDistribution": {
+              "oneStar": 4,
+              "twoStar": 0,
+              "threeStar": 1,
+              "fourStar": 1,
+              "fiveStar": 7
+            },
+            "imagesCount": 1,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.884Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 12 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 12 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 12 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 12 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 12 PM, 2 to 7 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "9 AM to 5 PM"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=PHT%20real%20estate&query_place_id=ChIJ63cDJabazRIRPpvIvP3kj6k",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 13,
+            "isAdvertisement": false,
+            "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=EdV-cebEvitdo-d70fAjCA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=85.30381&pitch=0&thumbfov=100",
+            "kgmid": "/g/11cs2wv9d4",
+            "businessProfileId": "98719702405748910"
+          }
+        },
+        {
+          "json": {
+            "title": "Savills Nice - Real Estate",
+            "subTitle": "Savills",
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "1 Pl. Massena, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "1 Pl. Massena",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://en.savills.fr/offices/nice.aspx",
+            "phone": "+33 4 93 87 41 15",
+            "phoneUnformatted": "+33493874115",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6974562,
+              "lng": 7.2695232
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 4.9,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJ3SG5xabazRIRuuRhESLbvUk",
+            "categories": [
+              "Real estate agency",
+              "Commercial real estate agency",
+              "Property management company",
+              "Real estate agent",
+              "Real estate consultant"
+            ],
+            "fid": "0x12cddaa6c5b921dd:0x49bddb221161e4ba",
+            "cid": "5313644074734052538",
+            "reviewsCount": 9,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 1,
+              "fiveStar": 8
+            },
+            "imagesCount": 16,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.884Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 6 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "Closed"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Savills%20Nice%20-%20Real%20Estate&query_place_id=ChIJ3SG5xabazRIRuuRhESLbvUk",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 14,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnUoqfgV0txRIw66_LQm36AW9Wip8eFld_gRrpMAsJTHnjSBUNd816ow_--GMOjPPxOs3CdKSRAmjxWgQYTy8Vr3HaPfaMgS5aOKXKdL1HkAnmqqfvTpKVDPdZZ2nVdVLwYIwP4=w408-h272-k-no",
+            "kgmid": "/g/12hkbqs9g",
+            "businessProfileId": "8093004404627872951"
+          }
+        },
+        {
+          "json": {
+            "title": "Luxury Real Estate French Riviera - Immobilier de Prestige Côte d'Azur - Doriane Sara",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate consultant",
+            "address": "2 Rue de la Liberté, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "2 Rue de la Liberté",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://www.engelvoelkers.com/fr/fr/shops/nice",
+            "phone": "+33 6 50 88 75 55",
+            "phoneUnformatted": "+33650887555",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6987195,
+              "lng": 7.2686841
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": null,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJxSIxzK_bzRIRKRLsYsD1xqg",
+            "categories": [
+              "Real estate consultant",
+              "Real estate agency",
+              "Real estate agent",
+              "Real estate appraiser"
+            ],
+            "fid": "0x12cddbafcc3122c5:0xa8c6f5c062ec1229",
+            "cid": "12161678050402767401",
+            "reviewsCount": null,
+            "imagesCount": 8,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.884Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9:30 AM to 7 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9:30 AM to 7 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9:30 AM to 7 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9:30 AM to 7 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9:30 AM to 7 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "10 AM to 2 PM"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Luxury%20Real%20Estate%20French%20Riviera%20-%20Immobilier%20de%20Prestige%20C%C3%B4te%20d'Azur%20-%20Doriane%20Sara&query_place_id=ChIJxSIxzK_bzRIRKRLsYsD1xqg",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 15,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkKNxbjAUkDMaR5QAQTdpE5fPmi8iPisI3BWS5kwOSU6WZye9x975xEreVFyL06WhucDxdxR3_BEifrYQjz9sBXMCtsV0Q7D1A1y_S0-0i4JQXxQ67XzS2IfeIBVj8jHXIk-BulvQJWDRwM=w469-h240-k-no",
+            "kgmid": "/g/11njc10ry5",
+            "businessProfileId": "16364508127611808846"
+          }
+        },
+        {
+          "json": {
+            "title": "MADIE Real Estate Services - MADIE Immobilier",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "81 Rue de France, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "81 Rue de France",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://www.madieimmobilier.fr/",
+            "phone": "+33 7 82 38 88 52",
+            "phoneUnformatted": "+33782388852",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6952058,
+              "lng": 7.25711
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 5,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJKRdVfQmcqCQRIyKbaNjOldQ",
+            "categories": [
+              "Real estate agency",
+              "Property management company",
+              "Real estate appraiser"
+            ],
+            "fid": "0x24a89c097d551729:0xd495ced8689b2223",
+            "cid": "15318377136433865251",
+            "reviewsCount": 10,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 0,
+              "fiveStar": 10
+            },
+            "imagesCount": 3,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.885Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9:30 AM to 12 PM, 2 to 5 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9:30 AM to 12 PM, 2 to 5 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9:30 AM to 12 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9:30 AM to 12 PM, 2 to 5 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "10 AM to 12 PM, 1 to 4 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "Closed"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": false,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "additionalInfo": {
+              "Accessibility": [
+                {
+                  "Wheelchair accessible restroom": true
+                }
+              ]
+            },
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=MADIE%20Real%20Estate%20Services%20-%20MADIE%20Immobilier&query_place_id=ChIJKRdVfQmcqCQRIyKbaNjOldQ",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 16,
+            "isAdvertisement": false,
+            "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=mrxWCTEEecL_Q0URBMxiSg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=180.49907&pitch=0&thumbfov=100",
+            "kgmid": "/g/11l6t350z9",
+            "businessProfileId": "10246355044620848896"
+          }
+        },
+        {
+          "json": {
+            "title": "Michaël Zingraf Real Estate Nice",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "14 Av. de Verdun, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "14 Av. de Verdun",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://www.michaelzingraf.com/fr/agence-immobiliere/michael-zingraf-nice",
+            "phone": "+33 4 22 45 45 45",
+            "phoneUnformatted": "+33422454545",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6967608,
+              "lng": 7.2680896
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 5,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJmf0Z74XbzRIRpD9HtBVO92Q",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cddb85ef19fd99:0x64f74e15b4473fa4",
+            "cid": "7275369578166173604",
+            "reviewsCount": 1,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 0,
+              "fiveStar": 1
+            },
+            "imagesCount": 10,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.885Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 12:30 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 12:30 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 12:30 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 12:30 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 12:30 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "Closed"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Micha%C3%ABl%20Zingraf%20Real%20Estate%20Nice&query_place_id=ChIJmf0Z74XbzRIRpD9HtBVO92Q",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 17,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlPfVBfMrnLPivmrg20Zny3RUPAE39WiT_6wV3-87emfJMfsic7SXARdLLmHAJtq2egQ_-FIvTkhUWODNEo_n9BMD6Tso6tGW0BsFd7jtkoldIoCfWM5TUFb9g4Txm_JV714pWAvm2DS40h=w408-h272-k-no",
+            "kgmid": "/g/11w9fbp6r6",
+            "businessProfileId": "7297265715221202291"
+          }
+        },
+        {
+          "json": {
+            "title": "BARBERA IMMOBILIER",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "29 Av. Jean Médecin, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "29 Av. Jean Médecin",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "http://www.barbera-gestion.com/",
+            "phone": "+33 4 65 27 40 51",
+            "phoneUnformatted": "+33465274051",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.7016925,
+              "lng": 7.2671522
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 3.9,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJR8YiPafazRIRwJuKW-Ct45A",
+            "categories": [
+              "Real estate agency",
+              "Apartment rental agency",
+              "Condominium rental agency",
+              "Property administration service",
+              "Real estate agent",
+              "Real estate consultant"
+            ],
+            "fid": "0x12cddaa73d22c647:0x90e3ade05b8a9bc0",
+            "cid": "10440379540295031744",
+            "reviewsCount": 104,
+            "reviewsDistribution": {
+              "oneStar": 26,
+              "twoStar": 4,
+              "threeStar": 0,
+              "fourStar": 3,
+              "fiveStar": 71
+            },
+            "imagesCount": 19,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.885Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [
+              {
+                "day": "Monday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Tuesday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Wednesday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Thursday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Friday",
+                "hours": "9 AM to 12 PM, 2 to 6 PM"
+              },
+              {
+                "day": "Saturday",
+                "hours": "Closed"
+              },
+              {
+                "day": "Sunday",
+                "hours": "Closed"
+              }
+            ],
+            "wasOpenAtScrapeTime": true,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=BARBERA%20IMMOBILIER&query_place_id=ChIJR8YiPafazRIRwJuKW-Ct45A",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 18,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlGORM_3nHaQZ2-lvHk997VBJu4GsOtJfamsIGzTvMtj3d_CPYvG-p_sPPiPwhUlwOZuChaISToyrM42UtEuSrTuzAgV50cI_C-3EavJcQfT7HJBh7Sh9Yd-aSJY0gJNMQpONpSmg=w408-h544-k-no",
+            "kgmid": "/g/11cs3z5zbb",
+            "businessProfileId": "17078470802413163107"
+          }
+        },
+        {
+          "json": {
+            "title": "Happy.Rentals Nice - Côte d'Azur",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Property management company",
+            "address": "37 Rue du Maréchal Joffre, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "37 Rue du Maréchal Joffre",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "https://www.happy.rentals/?utm_source=gmb&utm_medium=social-profile-icon&utm_campaign=office-gmb",
+            "phone": "+33 6 77 38 88 49",
+            "phoneUnformatted": "+33677388849",
+            "claimThisBusiness": false,
+            "location": {
+              "lat": 43.6979365,
+              "lng": 7.26218
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": 4.9,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJhWTuYuPRzRIRtHaWdFDezWA",
+            "categories": [
+              "Property management company",
+              "Apartment rental agency",
+              "Condominium rental agency",
+              "Holiday apartment rental",
+              "Holiday home",
+              "Real estate rental agency",
+              "Short term apartment rental agency",
+              "Vacation home rental agency"
+            ],
+            "fid": "0x12cdd1e362ee6485:0x60cdde50749676b4",
+            "cid": "6975475835001534132",
+            "reviewsCount": 19,
+            "reviewsDistribution": {
+              "oneStar": 0,
+              "twoStar": 0,
+              "threeStar": 0,
+              "fourStar": 2,
+              "fiveStar": 17
+            },
+            "imagesCount": 4,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.885Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [],
+            "wasOpenAtScrapeTime": null,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=Happy.Rentals%20Nice%20-%20C%C3%B4te%20d'Azur&query_place_id=ChIJhWTuYuPRzRIRtHaWdFDezWA",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 19,
+            "isAdvertisement": false,
+            "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkkrIaPE5zv_NZDNAJBa8qbBZTB359Q4MIjDbueRYHdk8N1KIrE_-ceyEKXvcaHjzepMRAROgsF7Rc-1EJzOu8pFo5ibUmUfNW4Az70pDl981TECyU_6E9JDbUeg7B6FeP8xEy9RbsyFysr=w408-h544-k-no",
+            "kgmid": "/g/11s99sqd1w",
+            "businessProfileId": "2966599463536583031"
+          }
+        },
+        {
+          "json": {
+            "title": "JMC Real Estate",
+            "subTitle": null,
+            "description": null,
+            "ownerDescription": null,
+            "price": null,
+            "categoryName": "Real estate agency",
+            "address": "16 Rue du Congrès, 06000 Nice, France",
+            "neighborhood": null,
+            "street": "16 Rue du Congrès",
+            "city": "Nice",
+            "postalCode": "06000",
+            "state": null,
+            "countryCode": "FR",
+            "website": "http://jmc-realestate.com/",
+            "phone": "+33 6 09 95 16 84",
+            "phoneUnformatted": "+33609951684",
+            "claimThisBusiness": true,
+            "location": {
+              "lat": 43.6975281,
+              "lng": 7.2627739
+            },
+            "locatedIn": null,
+            "floor": null,
+            "plusCode": null,
+            "menu": null,
+            "servicesLink": null,
+            "totalScore": null,
+            "permanentlyClosed": false,
+            "temporarilyClosed": false,
+            "placeId": "ChIJw6gdTwrQzRIRdxLypAvTe_s",
+            "categories": [
+              "Real estate agency"
+            ],
+            "fid": "0x12cdd00a4f1da8c3:0xfb7bd30ba4f21277",
+            "cid": "18121309572620751479",
+            "reviewsCount": null,
+            "imagesCount": 1,
+            "imageCategories": [],
+            "scrapedAt": "2026-09-28T15:57:23.885Z",
+            "reserveTableUrl": null,
+            "googleFoodUrl": null,
+            "hotelStars": null,
+            "hotelDescription": null,
+            "checkInDate": null,
+            "checkOutDate": null,
+            "hotelAds": [],
+            "popularTimesLiveText": null,
+            "popularTimesLivePercent": null,
+            "popularTimesHistogram": {},
+            "openingHours": [],
+            "wasOpenAtScrapeTime": null,
+            "peopleAlsoSearch": [],
+            "placesTags": [],
+            "reviewsTags": [],
+            "gasPrices": [],
+            "url": "https://www.google.com/maps/search/?api=1&query=JMC%20Real%20Estate&query_place_id=ChIJw6gdTwrQzRIRdxLypAvTe_s",
+            "searchPageUrl": "https://www.google.com/maps/search/real%20estate/@43.69688527975701,7.252932749999999,16z?hl=en",
+            "searchString": "real estate",
+            "language": "en",
+            "rank": 20,
+            "isAdvertisement": false,
+            "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=v4bZVLNzNGCw9LUm0Efh8Q&cb_client=search.gws-prod.gps&w=408&h=240&yaw=214.22682&pitch=0&thumbfov=100",
+            "kgmid": "/g/11c20sxft3",
+            "businessProfileId": null
+          }
+        }
+      ],
+      "On form submission": [
+        {
+          "json": {
+            "keywords": "real estate",
+            "location": "nice",
+            "maxResults": 20,
+            "submittedAt": "2026-09-28T11:56:58.799-04:00",
+            "formMode": "test"
+          }
+        }
+      ]
+    },
+    "versionId": "c7bba6f2-2968-4e0c-9c3a-27269e71eeb3",
+    "activeVersionId": "c7bba6f2-2968-4e0c-9c3a-27269e71eeb3",
+    "versionCounter": 105,
+    "triggerCount": 1,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+      {
+        "updatedAt": "2026-09-17T19:34:28.575Z",
+        "createdAt": "2026-09-17T19:34:28.575Z",
+        "role": "workflow:owner",
+        "workflowId": "S0HrXmdki1i1CVQe",
+        "projectId": "CoWShQdnzPrbj7Rw",
+        "project": {
+          "updatedAt": "2026-07-13T15:26:13.760Z",
+          "createdAt": "2026-07-13T15:25:39.794Z",
+          "id": "CoWShQdnzPrbj7Rw",
+          "name": "souhaib bouktiba <souhaib.bouktiba@uit.ac.ma>",
+          "type": "personal",
+          "icon": null,
+          "description": null,
+          "customTelemetryTags": [],
+          "creatorId": "737c0bb6-2437-47dd-976d-d58096f80134"
+        }
+      }
+    ],
+    "versionMetadata": {
+      "name": "Version c7bba6f2",
+      "description": ""
+    }
+  }
+]
