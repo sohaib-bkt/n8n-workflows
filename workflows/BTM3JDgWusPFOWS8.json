@@ -1,0 +1,201 @@
+{
+  "updatedAt": "2026-10-09T17:22:17.658Z",
+  "createdAt": "2026-10-09T17:12:45.562Z",
+  "id": "BTM3JDgWusPFOWS8",
+  "name": "Global Error Handler - Google Sheets Log",
+  "description": "Global error handler that logs failed workflow executions to Google Sheets",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "51ebb700-c702-426e-9b74-ac9abdc08ce6",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "timestamp",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "workflowName",
+              "value": "={{ $json.workflow.name }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "workflowId",
+              "value": "={{ $json.workflow.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "executionId",
+              "value": "={{ $json.execution.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "failedNode",
+              "value": "={{ $json.execution.lastNodeExecuted }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "errorMessage",
+              "value": "={{ $json.execution.error.message }}",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "errorStack",
+              "value": "={{ $json.execution.error.stack }}",
+              "type": "string"
+            },
+            {
+              "id": "a8",
+              "name": "mode",
+              "value": "={{ $json.execution.mode }}",
+              "type": "string"
+            },
+            {
+              "id": "a9",
+              "name": "executionUrl",
+              "value": "={{ $json.execution.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "a2bdb5a2-1871-4b8a-b6b9-333e41d32a72",
+      "name": "Format Error Log",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "138UYhmEv28ZYuCxOx2klAlfXqnu_j-AmJbWWQSAyEJQ",
+          "mode": "list",
+          "cachedResultName": "Errors logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/138UYhmEv28ZYuCxOx2klAlfXqnu_j-AmJbWWQSAyEJQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/138UYhmEv28ZYuCxOx2klAlfXqnu_j-AmJbWWQSAyEJQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "0ec68b17-c3d0-4853-89a3-4c7a32dfb6e3",
+      "name": "Log to Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "vOM2XUtJ0G1CJOfI",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Format Error Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Error Log": {
+      "main": [
+        [
+          {
+            "node": "Log to Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "nodeGroups": [],
+  "pinData": {},
+  "versionId": "6c02e8d8-2f1e-4023-8293-9942634059e5",
+  "activeVersionId": null,
+  "versionCounter": 6,
+  "triggerCount": 0,
+  "sourceWorkflowId": null,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-10-09T17:12:45.569Z",
+      "createdAt": "2026-10-09T17:12:45.569Z",
+      "role": "workflow:owner",
+      "workflowId": "BTM3JDgWusPFOWS8",
+      "projectId": "CoWShQdnzPrbj7Rw",
+      "project": {
+        "updatedAt": "2026-07-13T15:26:13.760Z",
+        "createdAt": "2026-07-13T15:25:39.794Z",
+        "id": "CoWShQdnzPrbj7Rw",
+        "name": "souhaib bouktiba <souhaib.bouktiba@uit.ac.ma>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "customTelemetryTags": [],
+        "creatorId": "737c0bb6-2437-47dd-976d-d58096f80134"
+      }
+    }
+  ],
+  "versionMetadata": {
+    "name": null,
+    "description": null
+  }
+}
